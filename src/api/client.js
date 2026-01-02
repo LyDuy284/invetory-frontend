@@ -2,6 +2,7 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: 'http://localhost:4000',
+  // baseURL: 'https://invetory-backend-2qkn.onrender.com/',
 });
 
 export const setAuthToken = (token) => {
