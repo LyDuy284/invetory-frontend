@@ -143,7 +143,7 @@ const OrdersPage = () => {
               }}
             >
               <div className="input-group" style={{ flex: 1, minWidth: 120 }}>
-                <label>Product</label>
+                <label>Chọn sản phẩm</label>
                 <select
                   value={item.productId}
                   onChange={(e) => handleItemChange(idx, 'productId', e.target.value)}
@@ -166,12 +166,14 @@ const OrdersPage = () => {
                 />
               </div>
               <div className="input-group" style={{ width: 140 }}>
-                <label>Quantity</label>
+                <label>Số lượng</label>
                 <input
                   type="number"
                   value={item.quantity}
                   onChange={(e) => handleItemChange(idx, 'quantity', e.target.value)}
                   placeholder="1"
+                  min="1"
+                  required
                 />
               </div>
             </div>

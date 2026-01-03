@@ -145,6 +145,7 @@ const ProductsPage = () => {
                 value={form.price}
                 onChange={handleChange}
                 placeholder="150000"
+                min="0"
                 required
               />
             </div>
@@ -156,6 +157,8 @@ const ProductsPage = () => {
                 value={form.stock}
                 onChange={handleChange}
                 placeholder="0"
+                min="0"
+                required
               />
             </div>
           </div>
