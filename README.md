@@ -18,3 +18,5 @@ npm run dev
 ```
 
 Make sure the backend is running at `http://localhost:4000`.
+Make sure the backend is on seeve at `https://invetory-backend-2qkn.onrender.com/`.
+The serve of frontend at `https://invetory-frontend-alpha.vercel.app/`
