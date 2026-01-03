@@ -104,6 +104,8 @@ const OrdersPage = () => {
 
       await api.patch(`/api/orders/${orderId}/status`, { status });
       setSuccess('Trạng thái đơn hàng đã được cập nhật');
+      if (successTimeout) clearTimeout(successTimeout);
+      setSuccessTimeout(setTimeout(() => setSuccess(''), 2000));
       fetchOrders(); 
     } catch (err) {
       setError('Cập nhật trạng thái đơn hàng thất bại');
