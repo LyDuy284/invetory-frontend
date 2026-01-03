@@ -10,8 +10,10 @@ const OrdersPage = () => {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [successTimeout, setSuccessTimeout] = useState(null);
 
-  // Fetch danh sách sản phẩm khi component được load
   const fetchProducts = async () => {
     try {
       const res = await api.get('/api/products');
@@ -21,7 +23,6 @@ const OrdersPage = () => {
     }
   };
 
-  // Fetch danh sách đơn hàng
   const fetchOrders = async () => {
     setLoadingList(true);
     setError('');
@@ -36,17 +37,15 @@ const OrdersPage = () => {
   };
 
   useEffect(() => {
-    fetchProducts(); // Lấy danh sách sản phẩm khi load trang
-    fetchOrders(); // Lấy danh sách đơn hàng
+    fetchProducts();
+    fetchOrders(); 
   }, []);
 
-  // Xử lý thay đổi giá trị trong item (Product ID, Product Name, Quantity)
   const handleItemChange = (index, field, value) => {
     setItems((prev) => {
       const copy = [...prev];
       copy[index] = { ...copy[index], [field]: value };
 
-      // Nếu thay đổi productId, tìm tên sản phẩm
       if (field === 'productId') {
         const selectedProduct = products.find((p) => p.id === Number(value));
         copy[index].productName = selectedProduct ? selectedProduct.name : '';
@@ -56,19 +55,16 @@ const OrdersPage = () => {
     });
   };
 
-  // Thêm sản phẩm vào danh sách
   const addItemRow = () => {
     setItems((prev) => [...prev, { productId: '', productName: '', quantity: '' }]);
   };
 
-  // Tạo đơn hàng mới
   const handleCreateOrder = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
     setCreating(true);
 
-    // Kiểm tra các item hợp lệ (có productId, productName và quantity)
     const invalidItem = items.find(
       (item) => !item.productId || !item.productName || !item.quantity || item.quantity <= 0
     );
@@ -87,7 +83,9 @@ const OrdersPage = () => {
       await api.post('/api/orders', { items: payloadItems });
       setSuccess('Tạo đơn hàng thành công');
       setItems([{ productId: '', productName: '', quantity: '' }]);
-      fetchOrders(); // Refresh danh sách đơn hàng
+      fetchOrders(); 
+      if (successTimeout) clearTimeout(successTimeout);
+      setSuccessTimeout(setTimeout(() => setSuccess(''), 2000));
     } catch (err) {
       setError(err.response?.data?.message || 'Tạo đơn hàng thất bại');
     } finally {
@@ -95,7 +93,6 @@ const OrdersPage = () => {
     }
   };
 
-  // Cập nhật trạng thái đơn hàng
   const handleUpdateStatus = async (orderId, status) => {
     try {
       const order = orders.find((order) => order.id === orderId);
@@ -107,22 +104,30 @@ const OrdersPage = () => {
 
       await api.patch(`/api/orders/${orderId}/status`, { status });
       setSuccess('Trạng thái đơn hàng đã được cập nhật');
-      fetchOrders(); // Refresh danh sách đơn hàng
+      fetchOrders(); 
     } catch (err) {
       setError('Cập nhật trạng thái đơn hàng thất bại');
     }
   };
 
-  // Lấy class cho trạng thái đơn hàng
   const getStatusClass = (status) => {
     if (status === 'completed') return 'badge completed';
     if (status === 'cancelled') return 'badge cancelled';
     return 'badge pending';
   };
 
+  const handleViewDetails = (order) => {
+    setSelectedOrder(order);
+    setShowModal(true); 
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedOrder(null); 
+  };
+
   return (
     <>
-      {/* Card tạo đơn hàng */}
       <Card title="Tạo đơn hàng mới">
         <form onSubmit={handleCreateOrder}>
           {items.map((item, idx) => (
@@ -185,7 +190,6 @@ const OrdersPage = () => {
         </form>
       </Card>
 
-      {/* Card danh sách đơn hàng */}
       <Card
         title="Danh sách đơn hàng"
         extra={
@@ -221,18 +225,23 @@ const OrdersPage = () => {
                   </td>
                   <td>{new Date(o.createdAt).toLocaleString('vi-VN')}</td>
                   <td>
+                   
                     {o.status === 'completed' ? (
                       <span className="badge completed">Completed</span>
                     ) : (
                      <select
                         value={o.status}
                         onChange={(e) => handleUpdateStatus(o.id, e.target.value)}
+                        style={{ marginRight: '10px' }}
                       >
                       <option value="pending">Pending</option>
                       <option value="completed">Completed</option>
                       <option value="cancelled">Cancelled</option>
                        </select>
                   )}
+                  <button className="button primary" onClick={() => handleViewDetails(o)} style={{ marginLeft: '10px' }}>
+                      Xem chi tiết
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -240,6 +249,37 @@ const OrdersPage = () => {
           </table>
         )}
       </Card>
+
+      {showModal && selectedOrder && (
+        <div className="modal">
+          <div className="modal-content">
+            <h2>Chi tiết đơn hàng {selectedOrder.id}</h2>
+            <p>Tổng tiền: {Number(selectedOrder.totalPrice).toLocaleString('vi-VN')} đ</p>
+            <p>Ngày: {new Date(selectedOrder.createdAt).toLocaleString('vi-VN')}</p>
+            <p>Trạng thái: {selectedOrder.status}</p>
+            <h3>Danh sách sản phẩm</h3>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Tên sản phẩm</th>
+                  <th>Số lượng</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedOrder.items.map((item) => (
+                  <tr key={item.id}>
+                    <td>{item.name}</td>
+                    <td>{item.OrderItem.quantity}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <button className="button secondary" onClick={handleCloseModal}>
+              Đóng
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 };

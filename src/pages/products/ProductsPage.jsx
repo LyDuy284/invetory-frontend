@@ -16,6 +16,7 @@ const ProductsPage = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [successTimeout, setSuccessTimeout] = useState(null);
 
   const fetchProducts = async () => {
     setLoadingList(true);
@@ -82,6 +83,8 @@ const ProductsPage = () => {
         setSuccess('Tạo sản phẩm thành công');
         setProducts((prev) => [res.data, ...prev]);
       }
+      if (successTimeout) clearTimeout(successTimeout);
+      setSuccessTimeout(setTimeout(() => setSuccess(''), 2000));
       resetForm();
     } catch (err) {
       setError(err.response?.data?.message || 'Lưu sản phẩm thất bại');
